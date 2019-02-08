@@ -34,6 +34,7 @@ func ChangeTimeLocation(newLocal *time.Location) {
 	timeLocal = newLocal
 }
 
+// Task struct
 type Task struct {
 	isOnce   bool
 	interval time.Duration
@@ -44,6 +45,7 @@ type Task struct {
 	gParams  map[string]([]interface{})
 }
 
+// Scheduler struct
 type Scheduler struct {
 	running bool
 	time    *time.Ticker
@@ -90,26 +92,32 @@ func every(interval uint64, once bool) *Task {
 	return newTask
 }
 
+// Every Seconds Task
 func EverySeconds(interval uint64) *Task {
 	return every(interval, false)
 }
 
+// Every Minutes Task
 func EveryMinutes(interval uint64) *Task {
 	return every(interval*60, false)
 }
 
+// Every Hours Task
 func EveryHours(interval uint64) *Task {
 	return every(interval*60*60, false)
 }
 
+// Every Days Task
 func EveryDays(interval uint64) *Task {
 	return every(interval*60*60*24, false)
 }
 
+// Fixed execution at dateTime
 func AtDateTime(year int, month time.Month, day, hour, minute, second int) *Task {
 	return every(uint64(time.Date(year, month, day, hour, minute, second, 0, timeLocal).Unix()), true)
 }
 
+// Task execution
 func (this *Task) Do(taskFun interface{}, params ...interface{}) error {
 	typ := reflect.TypeOf(taskFun)
 	if typ.Kind() != reflect.Func {
@@ -188,6 +196,7 @@ func (this *Task) run(locNow time.Time) (result []reflect.Value, err error) {
 	return
 }
 
+// Add Task
 func (this *Scheduler) Add(value *Task) *Scheduler {
 	if this.running {
 		return this
@@ -217,6 +226,7 @@ func (this *Scheduler) runAll(locNow time.Time) {
 	return
 }
 
+// schedule start
 func Start(context context.Context) {
 	if schedule == nil {
 		newScheduler()

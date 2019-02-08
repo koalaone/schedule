@@ -1,6 +1,8 @@
 ## Time Schedule
 [![GoDoc](https://godoc.org/github.com/koalaone/schedule?status.svg)](https://godoc.org/github.com/koalaone/schedule)
 [![Go Report Card](https://goreportcard.com/badge/github.com/koalaone/schedule)](https://goreportcard.com/report/github.com/koalaone/schedule)
+![Coverage](http://gocover.io/_badge/github.com/koalaone/schedule)
+
 ##### A simple time schedule library in Go.
 
 #### Example use

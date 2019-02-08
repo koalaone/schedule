@@ -90,8 +90,11 @@ func TestScheduler(t *testing.T) {
 		return
 	}
 
-	ctx, _ := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(context.Background())
 	Start(ctx)
+	defer func() {
+		cancel()
+	}()
 
-	select {}
+	time.Sleep(1 * time.Hour)
 }
