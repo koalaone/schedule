@@ -118,23 +118,23 @@ func AtDateTime(year int, month time.Month, day, hour, minute, second int) *Task
 }
 
 // Task execution
-func (this *Task) Do(taskFun interface{}, params ...interface{}) error {
+func (tk *Task) Do(taskFun interface{}, params ...interface{}) error {
 	typ := reflect.TypeOf(taskFun)
 	if typ.Kind() != reflect.Func {
 		return errors.New("param taskFun type error")
 	}
 
 	funcName := runtime.FuncForPC(reflect.ValueOf(taskFun).Pointer()).Name()
-	this.gName = funcName
-	this.gFunc[funcName] = taskFun
-	this.gParams[funcName] = params
+	tk.gName = funcName
+	tk.gFunc[funcName] = taskFun
+	tk.gParams[funcName] = params
 
 	return nil
 }
 
-func (this *Scheduler) checkTaskStatus(isWait bool) bool {
+func (tk *Scheduler) checkTaskStatus(isWait bool) bool {
 retry:
-	for _, taskItem := range this.tasks {
+	for _, taskItem := range tk.tasks {
 		locTask := taskItem
 
 		if locTask.running {
@@ -150,33 +150,33 @@ retry:
 	return true
 }
 
-func (this *Task) run(locNow time.Time) (result []reflect.Value, err error) {
-	if this.isOnce && (locNow.Unix()-this.lastRun.Unix() > 0) {
+func (tk *Task) run(locNow time.Time) (result []reflect.Value, err error) {
+	if tk.isOnce && (locNow.Unix()-tk.lastRun.Unix() > 0) {
 		return
 	}
 
-	if this.running {
+	if tk.running {
 		return
 	}
 
-	this.running = true
+	tk.running = true
 	defer func() {
-		this.running = false
+		tk.running = false
 	}()
 
-	if !this.isOnce {
-		nextTime := this.lastRun.Add(this.interval * time.Second)
+	if !tk.isOnce {
+		nextTime := tk.lastRun.Add(tk.interval * time.Second)
 		if (locNow.Unix() - nextTime.Unix()) < 0 {
 			return
 		}
 	} else {
-		if (locNow.Unix() - this.lastRun.Unix()) < 0 {
+		if (locNow.Unix() - tk.lastRun.Unix()) < 0 {
 			return
 		}
 	}
 
-	f := reflect.ValueOf(this.gFunc[this.gName])
-	params := this.gParams[this.gName]
+	f := reflect.ValueOf(tk.gFunc[tk.gName])
+	params := tk.gParams[tk.gName]
 	if len(params) != f.Type().NumIn() {
 		err = errors.New(" param num not adapted ")
 		return
@@ -187,35 +187,35 @@ func (this *Task) run(locNow time.Time) (result []reflect.Value, err error) {
 	}
 	result = f.Call(in)
 
-	if this.isOnce {
-		this.lastRun = time.Unix(0, 0)
+	if tk.isOnce {
+		tk.lastRun = time.Unix(0, 0)
 	}
 
-	this.lastRun = locNow
+	tk.lastRun = locNow
 
 	return
 }
 
 // Add Task
-func (this *Scheduler) Add(value *Task) *Scheduler {
-	if this.running {
-		return this
+func (tk *Scheduler) Add(value *Task) *Scheduler {
+	if tk.running {
+		return tk
 	}
 
 	if value == nil {
-		return this
+		return tk
 	}
 
-	this.Lock()
-	this.tasks = append(this.tasks, value)
-	this.Unlock()
+	tk.Lock()
+	tk.tasks = append(tk.tasks, value)
+	tk.Unlock()
 
-	return this
+	return tk
 }
 
-func (this *Scheduler) runAll(locNow time.Time) {
+func (tk *Scheduler) runAll(locNow time.Time) {
 
-	for _, taskItem := range this.tasks {
+	for _, taskItem := range tk.tasks {
 		locTask := taskItem
 
 		go func(task *Task) {
