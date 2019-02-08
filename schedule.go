@@ -28,10 +28,8 @@ import (
 	"time"
 )
 
-// Time location, default set by the time.Local (*time.Location)
 var timeLocal = time.Local
 
-// Change the time location
 func ChangeTimeLocation(newLocal *time.Location) {
 	timeLocal = newLocal
 }
