@@ -40,6 +40,7 @@ type Task struct {
 	interval time.Duration
 	running  bool
 	lastRun  time.Time
+	stop     bool
 	gName    string
 	gFunc    map[string]interface{}
 	gParams  map[string]([]interface{})
@@ -66,6 +67,14 @@ func newScheduler() *Scheduler {
 	return schedule
 }
 
+func GetScheduler() *Scheduler {
+	if schedule == nil {
+		newScheduler()
+	}
+
+	return schedule
+}
+
 func every(interval uint64, once bool) *Task {
 	if interval <= 0 {
 		interval = 1
@@ -74,6 +83,7 @@ func every(interval uint64, once bool) *Task {
 		isOnce:   once,
 		interval: time.Duration(interval),
 		lastRun:  time.Now(),
+		stop:     false,
 		gName:    "",
 		gFunc:    make(map[string]interface{}, 0),
 		gParams:  make(map[string]([]interface{}), 0),
@@ -119,6 +129,10 @@ func AtDateTime(year int, month time.Month, day, hour, minute, second int) *Task
 
 // Task execution
 func (tk *Task) Do(taskFun interface{}, params ...interface{}) error {
+	if taskFun == nil {
+		return errors.New("param taskFun is nil")
+	}
+
 	typ := reflect.TypeOf(taskFun)
 	if typ.Kind() != reflect.Func {
 		return errors.New("param taskFun type error")
@@ -151,6 +165,10 @@ retry:
 }
 
 func (tk *Task) run(locNow time.Time) (result []reflect.Value, err error) {
+	if tk.stop {
+		return
+	}
+
 	if tk.isOnce && (locNow.Unix()-tk.lastRun.Unix() > 0) {
 		return
 	}
@@ -173,6 +191,10 @@ func (tk *Task) run(locNow time.Time) (result []reflect.Value, err error) {
 		if (locNow.Unix() - tk.lastRun.Unix()) < 0 {
 			return
 		}
+	}
+
+	if tk.gFunc[tk.gName] == nil {
+		return
 	}
 
 	f := reflect.ValueOf(tk.gFunc[tk.gName])
@@ -217,6 +239,7 @@ func (tk *Scheduler) runAll(locNow time.Time) {
 
 	for _, taskItem := range tk.tasks {
 		locTask := taskItem
+		locTask.stop = false
 
 		go func(task *Task) {
 			_, _ = task.run(locNow)
@@ -224,6 +247,21 @@ func (tk *Scheduler) runAll(locNow time.Time) {
 	}
 
 	return
+}
+
+func Stop() {
+	if !schedule.running {
+		return
+	}
+
+	schedule.Lock()
+	schedule.running = false
+	schedule.Unlock()
+
+	for _, taskItem := range schedule.tasks {
+		locTask := taskItem
+		locTask.stop = true
+	}
 }
 
 // schedule start

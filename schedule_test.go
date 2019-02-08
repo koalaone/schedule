@@ -90,8 +90,18 @@ func TestScheduler(t *testing.T) {
 		return
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
+	Start(ctx)
+	defer func() {
+		cancel()
+	}()
+
+	time.Sleep(3 * time.Minute)
+}
+
+func TestSchedulerError(t *testing.T) {
 	// error test
-	err = EverySeconds(-1).Do(EventSecond, "second")
+	err := EverySeconds(0).Do(EventSecond, "second")
 	if err != nil {
 		t.Errorf("test schedule EventSecond error:%v", err.Error())
 		return
@@ -99,8 +109,8 @@ func TestScheduler(t *testing.T) {
 
 	// error test
 	err = EverySeconds(1).Do(nil, "second")
-	if err != nil {
-		t.Errorf("test schedule EventSecond error:%v", err.Error())
+	if err == nil {
+		t.Errorf("test schedule EventSecond test error")
 		return
 	}
 
@@ -110,5 +120,18 @@ func TestScheduler(t *testing.T) {
 		cancel()
 	}()
 
+	// stop and start
+	Stop()
+	Start(ctx)
+
 	time.Sleep(3 * time.Minute)
+}
+
+func TestGetScheduler(t *testing.T) {
+	GetScheduler()
+}
+
+func TestScheduler_Add(t *testing.T) {
+	// error
+	GetScheduler().Add(nil)
 }
