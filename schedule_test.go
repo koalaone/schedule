@@ -90,6 +90,20 @@ func TestScheduler(t *testing.T) {
 		return
 	}
 
+	// error test
+	err = EverySeconds(-1).Do(EventSecond, "second")
+	if err != nil {
+		t.Errorf("test schedule EventSecond error:%v", err.Error())
+		return
+	}
+
+	// error test
+	err = EverySeconds(1).Do(nil, "second")
+	if err != nil {
+		t.Errorf("test schedule EventSecond error:%v", err.Error())
+		return
+	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 	Start(ctx)
 	defer func() {
