@@ -96,5 +96,5 @@ func TestScheduler(t *testing.T) {
 		cancel()
 	}()
 
-	time.Sleep(1 * time.Hour)
+	time.Sleep(3 * time.Minute)
 }
