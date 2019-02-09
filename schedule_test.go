@@ -124,7 +124,9 @@ func TestSchedulerError(t *testing.T) {
 	Stop()
 	Start(ctx)
 
-	time.Sleep(3 * time.Minute)
+	// test need to use
+	// select {}
+	time.Sleep(10 * time.Second)
 }
 
 func TestGetScheduler(t *testing.T) {
